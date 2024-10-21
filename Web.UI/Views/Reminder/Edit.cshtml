@@ -1,0 +1,37 @@
+﻿@model TaskManagerMVC.ViewModels.UpdateReminderViewModel
+
+@{
+    ViewData["Title"] = "Edit Reminder";
+}
+
+<div class="container">
+    <h1 class="mt-4">Edit Reminder</h1>
+    <form asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label asp-for="Message" class="form-label"></label>
+            <textarea asp-for="Message" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ReminderTime" class="form-label"></label>
+            <input asp-for="ReminderTime" class="form-control" type="datetime-local" />
+            <span asp-validation-for="ReminderTime" class="text-danger"></span>
+        </div>
+        <div class="mb-3 form-check">
+            <input asp-for="IsTriggered" class="form-check-input" />
+            <label asp-for="IsTriggered" class="form-check-label"></label>
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

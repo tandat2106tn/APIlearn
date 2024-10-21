@@ -16,7 +16,7 @@
 		public string TaskTypeName { get; set; }
 		public string TaskDifficultyName { get; set; }
 
-
+		public List<ReminderDto> Reminders { get; set; }
 
 	}
 }

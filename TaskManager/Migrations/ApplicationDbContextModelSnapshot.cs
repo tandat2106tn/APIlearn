@@ -152,6 +152,32 @@ namespace TaskManager.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("TaskManager.Models.Reminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsTriggered")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ReminderTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TodoTaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TodoTaskId");
+
+                    b.ToTable("Reminders");
+                });
+
             modelBuilder.Entity("TaskManager.Models.TaskDifficulty", b =>
                 {
                     b.Property<Guid>("Id")
@@ -351,6 +377,17 @@ namespace TaskManager.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TaskManager.Models.Reminder", b =>
+                {
+                    b.HasOne("TaskManager.Models.TodoTask", "Task")
+                        .WithMany("Reminders")
+                        .HasForeignKey("TodoTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("TaskManager.Models.TodoTask", b =>
                 {
                     b.HasOne("TaskManager.Models.TaskDifficulty", "TaskDifficulty")
@@ -386,6 +423,11 @@ namespace TaskManager.Migrations
             modelBuilder.Entity("TaskManager.Models.TaskType", b =>
                 {
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("TaskManager.Models.TodoTask", b =>
+                {
+                    b.Navigation("Reminders");
                 });
 
             modelBuilder.Entity("TaskManager.Models.User", b =>

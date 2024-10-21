@@ -115,6 +115,40 @@ namespace TaskManager.Data
 			await context.Tasks.AddRangeAsync(todoTasks);
 
 			await context.SaveChangesAsync();
+
+			// Trong phương thức SeedData của DataSeeder
+
+			// Sau khi đã seed TodoTasks và lưu vào database
+
+			// Seed Reminders
+			var reminders = new List<Reminder>
+			{
+				new Reminder
+				{
+					Message = "Don't forget to review the project proposal before the meeting!",
+					ReminderTime = DateTime.Now,
+					IsTriggered = false,
+					TodoTaskId = todoTasks[0].Id // For "Complete Project Proposal" task
+				},
+				new Reminder
+				{
+					Message = "Remember to check for fresh produce deals at the supermarket.",
+					ReminderTime = DateTime.Now,
+					IsTriggered = false,
+					TodoTaskId = todoTasks[1].Id // For "Go Grocery Shopping" task
+				},
+				new Reminder
+				{
+					Message = "Make sure to go through practice problems for the math exam!",
+					ReminderTime = DateTime.Now,
+					IsTriggered = false,
+					TodoTaskId = todoTasks[2].Id // For "Study for Exam" task
+				}
+			};
+
+			await context.Reminders.AddRangeAsync(reminders);
+			await context.SaveChangesAsync();
+
 		}
 	}
 }

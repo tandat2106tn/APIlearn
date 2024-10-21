@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container">
+    <h1 class="mt-4">Welcome to Task Manager</h1>
+    <p class="lead">Manage your tasks and reminders efficiently.</p>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Tasks</h5>
+                    <p class="card-text">View and manage your tasks.</p>
+                    <a href="@Url.Action("Index", "TodoTask")" class="btn btn-primary">Go to Tasks</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Reminders</h5>
+                    <p class="card-text">Set and view your reminders.</p>
+                    <a href="@Url.Action("Index", "Reminder")" class="btn btn-primary">Go to Reminders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

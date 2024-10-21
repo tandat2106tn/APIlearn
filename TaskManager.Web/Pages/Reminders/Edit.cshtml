@@ -1,0 +1,45 @@
+﻿@page
+@model TaskManager.Web.Pages.Reminders.EditModel
+@{
+    ViewData["Title"] = "Edit Reminder";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post">
+    <input type="hidden" asp-for="Reminder.Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Reminder.Message" class="control-label"></label>
+        <input asp-for="Reminder.Message" class="form-control" />
+        <span asp-validation-for="Reminder.Message" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Reminder.ReminderTime" class="control-label"></label>
+        <input asp-for="Reminder.ReminderTime" class="form-control" type="datetime-local" />
+        <span asp-validation-for="Reminder.ReminderTime" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Reminder.TodoTaskId" class="control-label"></label>
+        <select asp-for="Reminder.TodoTaskId" asp-items="Model.Tasks" class="form-control"></select>
+        <span asp-validation-for="Reminder.TodoTaskId" class="text-danger"></span>
+    </div>
+    <div class="form-group form-check">
+        <label class="form-check-label">
+            <input class="form-check-input" asp-for="Reminder.IsTriggered" /> @Html.DisplayNameFor(model => model.Reminder.IsTriggered)
+        </label>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Save" class="btn btn-primary" />
+    </div>
+</form>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

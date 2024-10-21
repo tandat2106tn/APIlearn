@@ -1,137 +1,111 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using TaskManager.DTOs;
 using TaskManager.Models;
 
 namespace TaskManager.Repositories
 {
-	public class TodoTaskRepository : GenericRepository<TodoTask>, ITodoTaskRepository
-	{
-		private readonly IMapper mapper;
-		private readonly ILogger<TodoTaskRepository> logger;
-
-		public TodoTaskRepository(ApplicationDbContext dbContext, IMapper mapper, ILogger<TodoTaskRepository> logger) : base(dbContext)
-		{
-			this.mapper = mapper;
-			this.logger = logger;
-		}
+    public class TodoTaskRepository : ITodoTaskRepository
+    {
+        private readonly UnitOfWork unitOfWork;
 
 
+        public TodoTaskRepository(UnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
 
-		public async Task<IEnumerable<TodoTaskDto>> GetAllAsync()
-		{
-			try
-			{
-				var tasks = await dbContext.Tasks.Include(t => t.TaskType).Include(t => t.TaskDifficulty).Include(t => t.User).ToListAsync();
-				var taskDtos = mapper.Map<IEnumerable<TodoTaskDto>>(tasks);
-				return taskDtos;
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Error occurred while getting all tasks");
-				throw;
-			}
-		}
-
-		public async Task<TodoTaskDto> GetByIdAsync(Guid id)
-		{
-			try
-			{
-				var task = await dbContext.Tasks.Include(t => t.TaskType).Include(t => t.TaskDifficulty).Include(t => t.User).FirstOrDefaultAsync(t => t.Id == id);
-				return mapper.Map<TodoTaskDto>(task);
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Error occurred while getting task by Id");
-				throw;
-			}
-		}
-
-
-		public async Task<IEnumerable<TodoTaskDto>> GetTasksByUserIdAsync(Guid id)
-		{
-			try
-			{
-				var tasks = await dbContext.Tasks.Include(t => t.TaskType).Include(t => t.TaskDifficulty).Include(t => t.User)
-				.Where(t => t.UserId == id)
-				.ToListAsync();
-				return mapper.Map<IEnumerable<TodoTaskDto>>(tasks);
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Error occurred while getting tasks by UserId");
-				throw;
-			}
-		}
-
-		public async Task<bool> DeleteAsync(Guid id)
-		{
-			try
-			{
-
-
-				var task = dbContext.Tasks.FirstOrDefault(t => t.Id == id);
-				if (task != null)
-				{
-					base.Remove(task);
-					return true;
-				}
-				return false;
-
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Error occurred while deleting task");
-				throw;
-			}
-
-
-		}
-
-
-		public async Task<TodoTaskDto> AddAsync(CreateTodoTaskDto createTaskDto)
-		{
-			try
-			{
-				var task = mapper.Map<TodoTask>(createTaskDto);
-				await base.AddAsync(task);
-				var taskDto = mapper.Map<TodoTaskDto>(task);
-				return taskDto;
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Error occurred while Adding task");
-				throw;
-			}
-
-		}
-
-		public async Task<TodoTaskDto> UpdateAsync(Guid id, UpdateTodoTaskDto updateTaskDto)
-		{
-			try
-			{
-
-
-				var task = await base.GetByIdAsync(id);
-				if (task == null)
-				{
-					return null;
-				}
-
-				// Chỉ update các trường cần thiết
-				mapper.Map(updateTaskDto, task);
-				base.Update(task);
+        }
 
 
 
-				var taskDto = mapper.Map<TodoTaskDto>(task);
-				return taskDto;
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Error occurred while Updating task");
-				throw;
-			}
-		}
-	}
+        public async Task<IEnumerable<TodoTaskDto>> GetAllAsync()
+        {
+            try
+            {
+                var tasks = await unitOfWork.dbContext.Tasks
+                    .Include(t => t.TaskType)
+                    .Include(t => t.TaskDifficulty)
+                    .Include(t => t.User)
+                    .Include(t => t.Reminders)
+                    .ToListAsync();
+                return unitOfWork.mapper.Map<IEnumerable<TodoTaskDto>>(tasks);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                throw; // Re-throw the exception to be caught by the global exception handler
+            }
+        }
+
+        public async Task<TodoTaskDto> GetByIdAsync(Guid id)
+        {
+
+            var task = await unitOfWork.dbContext.Tasks.Include(t => t.TaskType).Include(t => t.TaskDifficulty).Include(t => t.User).Include(t => t.Reminders).FirstOrDefaultAsync(t => t.Id == id);
+            return unitOfWork.mapper.Map<TodoTaskDto>(task);
+
+        }
+
+
+        public async Task<IEnumerable<TodoTaskDto>> GetTasksByUserIdAsync(Guid id)
+        {
+
+            var tasks = await unitOfWork.dbContext.Tasks.Include(t => t.TaskType).Include(t => t.TaskDifficulty).Include(t => t.Reminders).Include(t => t.User)
+            .Where(t => t.UserId == id)
+            .ToListAsync();
+            return unitOfWork.mapper.Map<IEnumerable<TodoTaskDto>>(tasks);
+
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var task = await unitOfWork.TodoTasks.GetByIdAsync(id);
+            if (task == null)
+            {
+                return false;
+            }
+            unitOfWork.TodoTasks.Remove(task);
+            await unitOfWork.CompleteAsync();
+            return true;
+
+
+        }
+
+
+        public async Task<TodoTaskDto> AddAsync(CreateTodoTaskDto createTaskDto)
+        {
+
+            var task = unitOfWork.mapper.Map<TodoTask>(createTaskDto);
+            await unitOfWork.TodoTasks.AddAsync(task);
+            var taskDto = unitOfWork.mapper.Map<TodoTaskDto>(task);
+            await unitOfWork.CompleteAsync();
+            return taskDto;
+
+
+
+        }
+
+        public async Task<TodoTaskDto> UpdateAsync(Guid id, UpdateTodoTaskDto updateTaskDto)
+        {
+            var task = await unitOfWork.TodoTasks.GetByIdAsync(id);
+            if (task == null)
+            {
+                return null;
+            }
+
+            // Cập nhật các thuộc tính
+            task.Title = updateTaskDto.Title;
+            task.Description = updateTaskDto.Description;
+            task.IsCompleted = updateTaskDto.IsCompleted;
+            task.DueDate = updateTaskDto.DueDate;
+            task.TaskTypeId = updateTaskDto.TaskTypeId;
+            task.TaskDifficultyId = updateTaskDto.TaskDifficultyId;
+            task.UserId = updateTaskDto.UserId;
+
+            unitOfWork.TodoTasks.Update(task, id);
+            await unitOfWork.CompleteAsync();
+
+            return unitOfWork.mapper.Map<TodoTaskDto>(task);
+        }
+
+    }
 }
+

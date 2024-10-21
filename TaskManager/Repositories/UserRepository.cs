@@ -1,102 +1,66 @@
-﻿using AutoMapper;
-using TaskManager.DTOs;
+﻿using TaskManager.DTOs;
 using TaskManager.Models;
 using TaskManager.Repositories;
 
-public class UserRepository : GenericRepository<User>, IUserRepository
+public class UserRepository : IUserRepository
 {
+	private readonly UnitOfWork unitOfWork;
 
-	private readonly IMapper _mapper;
-	private readonly ILogger<UserRepository> logger;
-
-	public UserRepository(ApplicationDbContext dbcontext, IMapper mapper, ILogger<UserRepository> logger) : base(dbcontext)
+	public UserRepository(UnitOfWork unitOfWork)
 	{
-
-		_mapper = mapper;
-		this.logger = logger;
+		this.unitOfWork = unitOfWork;
 	}
+
 
 	public async Task<UserDto> GetByIdAsync(Guid id)
 	{
-		try
-		{
+		var user = await unitOfWork.Users.GetByIdAsync(id);
+		return unitOfWork.mapper.Map<UserDto>(user);
 
-
-			var user = await base.GetByIdAsync(id);
-			return _mapper.Map<UserDto>(user);
-		}
-		catch (Exception ex)
-		{
-			logger.LogError(ex, "Error occurred while getting User by Id");
-			throw;
-		}
 	}
 
 	public async Task<IEnumerable<UserDto>> GetAllAsync()
 	{
-		try
-		{
-			var users = await base.GetAllAsync();
-			return _mapper.Map<IEnumerable<UserDto>>(users);
-		}
-		catch (Exception ex)
-		{
-			logger.LogError(ex, "Error occurred while getting all User");
-			throw;
-		}
+
+		var users = await unitOfWork.Users.GetAllAsync();
+		return unitOfWork.mapper.Map<IEnumerable<UserDto>>(users);
+
+
+
 	}
 
 	public async Task<UserDto> AddAsync(CreateUserDto createUserDto)
 	{
-		try
-		{
-			var user = _mapper.Map<User>(createUserDto);
-			await base.AddAsync(user);
-			return _mapper.Map<UserDto>(user);
-		}
-		catch (Exception ex)
-		{
-			logger.LogError(ex, "Error occurred while Adding User");
-			throw;
-		}
+		var user = unitOfWork.mapper.Map<User>(createUserDto);
+		await unitOfWork.Users.AddAsync(user);
+		await unitOfWork.CompleteAsync();
+		return unitOfWork.mapper.Map<UserDto>(user);
+
 	}
 
 	public async Task<UserDto> UpdateAsync(Guid id, UpdateUserDto updateUserDto)
 	{
-		try
+
+		var user = unitOfWork.mapper.Map<User>(updateUserDto);
+		if (user == null)
 		{
-			var user = await base.GetByIdAsync(id);
-			if (user == null)
-			{
-				return null;
-			}
-			_mapper.Map(updateUserDto, user);
-			base.Update(user);
-			return _mapper.Map<UserDto>(user);
+			return null;
 		}
-		catch (Exception ex)
-		{
-			logger.LogError(ex, "Error occurred while Updating User");
-			throw;
-		}
+		unitOfWork.Users.Update(user, id);
+		await unitOfWork.CompleteAsync();
+		return unitOfWork.mapper.Map<UserDto>(user);
+
 	}
 
 	public async Task<bool> DeleteAsync(Guid id)
 	{
-		try
+		var user = await unitOfWork.Users.GetByIdAsync(id);
+		if (user == null)
 		{
-			var user = await base.GetByIdAsync(id);
-			if (user != null)
-			{
-				base.Remove(user);
-				return true;
-			}
 			return false;
 		}
-		catch (Exception ex)
-		{
-			logger.LogError(ex, "Error occurred while Deleting User");
-			throw;
-		}
+		unitOfWork.Users.Remove(user);
+		await unitOfWork.CompleteAsync();
+		return true;
 	}
 }

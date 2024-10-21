@@ -1,0 +1,59 @@
+﻿@page
+@model TaskManager.Web.Pages.Tasks.CreateModel
+@{
+    ViewData["Title"] = "Create Task";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Task.Title" class="control-label"></label>
+        <input asp-for="Task.Title" class="form-control" />
+        <span asp-validation-for="Task.Title" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Task.Description" class="control-label"></label>
+        <textarea asp-for="Task.Description" class="form-control"></textarea>
+        <span asp-validation-for="Task.Description" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Task.DueDate" class="control-label"></label>
+        <input asp-for="Task.DueDate" class="form-control" type="date" />
+        <span asp-validation-for="Task.DueDate" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Task.UserId" class="control-label"></label>
+        <select asp-for="Task.UserId" asp-items="Model.Users" class="form-control"></select>
+        <span asp-validation-for="Task.UserId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Task.TaskTypeId" class="control-label"></label>
+        <select asp-for="Task.TaskTypeId" asp-items="Model.TaskTypes" class="form-control"></select>
+        <span asp-validation-for="Task.TaskTypeId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Task.TaskDifficultyId" class="control-label"></label>
+        <select asp-for="Task.TaskDifficultyId" asp-items="Model.TaskDifficulties" class="form-control"></select>
+        <span asp-validation-for="Task.TaskDifficultyId" class="text-danger"></span>
+    </div>
+    <div class="form-group form-check">
+        <label class="form-check-label">
+            <input class="form-check-input" asp-for="Task.IsCompleted" /> @Html.DisplayNameFor(model => model.Task.IsCompleted)
+        </label>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" />
+    </div>
+</form>
+
+<div>
+    <a asp-page="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

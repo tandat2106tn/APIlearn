@@ -23,6 +23,11 @@ namespace TaskManager.Profiles
 			CreateMap<UpdateTodoTaskDto, TodoTask>().ReverseMap();
 
 
+			CreateMap<Reminder, ReminderDto>();
+			CreateMap<CreateReminderDto, Reminder>();
+			CreateMap<UpdateReminderDto, Reminder>();
+
+
 		}
 	}
 }

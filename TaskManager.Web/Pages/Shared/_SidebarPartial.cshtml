@@ -1,0 +1,31 @@
+﻿<div class="sidebar-sticky pt-3">
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["Page"].ToString() == "/Index" ? "active" : "")" asp-page="/Index">
+                <i class="bi bi-house-door"></i>
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["Page"].ToString().StartsWith("/Tasks/") ? "active" : "")" asp-page="/Tasks/Index">
+                <i class="bi bi-list-task"></i>
+                Tasks
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["Page"].ToString().StartsWith("/Reminders/") ? "active" : "")" asp-page="/Reminders/Index">
+                <i class="bi bi-bell"></i>
+                Reminders
+            </a>
+        </li>
+        @if (User.IsInRole("Admin"))
+        {
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Page"].ToString().StartsWith("/Users/") ? "active" : "")" asp-page="/Users/Index">
+                        <i class="bi bi-people"></i>
+                        Users
+                    </a>
+                </li>
+        }
+    </ul>
+</div>

@@ -1,0 +1,18 @@
+﻿<!-- Pages/UserInfo.cshtml -->
+
+@model UserInfoModel
+@{
+    ViewData["Title"] = "User Information";
+}
+
+<h1>User Information</h1>
+
+<p>User ID: @Model.UserId</p>
+
+<h2>Roles:</h2>
+<ul>
+    @foreach (var role in Model.Roles)
+    {
+        <li>@role</li>
+    }
+</ul>

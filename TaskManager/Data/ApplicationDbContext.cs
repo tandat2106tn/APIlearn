@@ -13,6 +13,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
 	public DbSet<TaskType> TaskTypes { get; set; }
 	public DbSet<TaskDifficulty> TaskDifficulties { get; set; }
 
+	public DbSet<Reminder> Reminders { get; set; }
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
@@ -33,6 +35,14 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
 			.WithMany(td => td.Tasks)
 			.HasForeignKey(t => t.TaskDifficultyId);
 
+		modelBuilder.Entity<Reminder>()
+		.HasOne(r => r.Task)
+		.WithMany(t => t.Reminders)
+		.HasForeignKey(r => r.TodoTaskId)
+		.OnDelete(DeleteBehavior.Cascade);
 
+		modelBuilder.Entity<Reminder>()
+		.Property(r => r.TodoTaskId)
+		.IsRequired();
 	}
 }

@@ -1,0 +1,39 @@
+﻿@model IEnumerable<TaskManagerMVC.ViewModels.ReminderViewModel>
+
+@{
+    ViewData["Title"] = "Reminders";
+}
+
+<div class="container">
+    <h1 class="mt-4">Reminders</h1>
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New Reminder</a>
+    </p>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Message</th>
+                <th>Reminder Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                    <tr>
+                        <td>@item.Message</td>
+                        <td>@item.ReminderTime.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(item.IsTriggered ? "Triggered" : "Pending")</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this reminder?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+            }
+        </tbody>
+    </table>
+</div>

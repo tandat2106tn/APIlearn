@@ -1,4 +1,4 @@
-using FluentValidation.AspNetCore;
+﻿using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -6,10 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using TaskManager.Data;
-using TaskManager.Filters;
-using TaskManager.Middleware;
 using TaskManager.Models;
 using TaskManager.Profiles;
 using TaskManager.Repositories;
@@ -19,125 +16,104 @@ using TaskManager.Validators;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Services.AddControllers();
 builder.Services.AddControllers().AddFluentValidation(fv =>
 {
 	fv.RegisterValidatorsFromAssemblyContaining<CreateTodoTaskDtoValidator>();
 	fv.ImplicitlyValidateChildProperties = true;
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("TaskManagerConnection")));
-builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<ITodoTaskRepository, TodoTaskRepository>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddAuthorization(options =>
-{
-	options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "Admin"));
-	options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
-});
-
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-	.AddJwtBearer(options =>
-	{
-		options.TokenValidationParameters = new TokenValidationParameters
-		{
-			ValidateIssuer = true,
-			ValidateAudience = true,
-			ValidateLifetime = true,
-			ValidateIssuerSigningKey = true,
-			ValidIssuer = builder.Configuration["Jwt:Issuer"],
-			ValidAudience = builder.Configuration["Jwt:Audience"],
-			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-		};
-		options.Events = new JwtBearerEvents
-		{
-			OnChallenge = context =>
-			{
-				context.HandleResponse();
-				context.Response.StatusCode = 401;
-				context.Response.ContentType = "application/json";
-				var result = JsonSerializer.Serialize(new { message = "You are not authorized" });
-				return context.Response.WriteAsync(result);
-			}
-		};
-	});
-
-
-
-builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
-{
-
-
-})
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
-
-
-
 builder.Services.AddSwaggerGen(c =>
 {
 	c.SwaggerDoc("v1", new OpenApiInfo { Title = "Task Manager API", Version = "v1" });
 
-	// Add JWT Authentication
-	var securityScheme = new OpenApiSecurityScheme
-	{
-		Name = "JWT Authentication",
-		Description = "Enter JWT Bearer token **_only_**",
-		In = ParameterLocation.Header,
-		Type = SecuritySchemeType.Http,
-		Scheme = "bearer",
-		BearerFormat = "JWT",
-		Reference = new OpenApiReference
-		{
-			Id = JwtBearerDefaults.AuthenticationScheme,
-			Type = ReferenceType.SecurityScheme
-		}
-	};
-
 	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
-		Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+		Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
 		Name = "Authorization",
 		In = ParameterLocation.Header,
 		Type = SecuritySchemeType.ApiKey,
 		Scheme = "Bearer"
 	});
 
-	c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-{
+	c.AddSecurityRequirement(new OpenApiSecurityRequirement
 	{
-		new OpenApiSecurityScheme
 		{
-			Reference = new OpenApiReference
+			new OpenApiSecurityScheme
 			{
-				Type = ReferenceType.SecurityScheme,
-				Id = "Bearer"
+				Reference = new OpenApiReference
+				{
+					Type = ReferenceType.SecurityScheme,
+					Id = "Bearer"
+				}
 			},
-			Scheme = "oauth2",
-			Name = "Bearer",
-			In = ParameterLocation.Header,
-		},
-		new List<string>()
-	}
+			new string[] {}
+		}
+	});
 });
 
-	c.OperationFilter<SwaggerAuthorizationOperationFilter>();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+	options.UseSqlServer(builder.Configuration.GetConnectionString("TaskManagerConnection")));
+
+builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
+
+// Register repositories and services
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITodoTaskRepository, TodoTaskRepository>();
+builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
+builder.Services.AddTransient<UnitOfWork>();
+builder.Services.AddScoped<JwtService>();
+
+// Configure authorization
+builder.Services.AddAuthorization(options =>
+{
+	options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "Admin"));
+	options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
 
+// Configure JWT
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+builder.Services.AddAuthentication(options =>
+{
+	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+	options.TokenValidationParameters = new TokenValidationParameters
+	{
+		ValidateIssuer = true,
+		ValidateAudience = true,
+		ValidateLifetime = true,
+		ValidateIssuerSigningKey = true,
+		ValidIssuer = jwtSettings.Issuer,
+		ValidAudience = jwtSettings.Audience,
+		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+	};
+});
+
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowSpecificOrigin",
+		builder => builder
+			.WithOrigins("https://localhost:7277")
+			.AllowAnyHeader()
+			.AllowCredentials());
+});
+
+
+// Configure Identity
+builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+{
+	// You can configure identity options here if needed
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 var app = builder.Build();
-
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -147,9 +123,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseRouting();
+app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
+app.UseAuthorization();
+
+// Logging middleware
 app.Use(async (context, next) =>
 {
 	var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -164,11 +143,10 @@ app.Use(async (context, next) =>
 	}
 	await next();
 });
-app.UseAuthorization();
+
 app.MapControllers();
 
-
-
+// Seed data
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
@@ -177,5 +155,8 @@ using (var scope = app.Services.CreateScope())
 	var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 	await DataSeeder.SeedData(context, userManager, roleManager);
 }
+
+// Configure CORS
+app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 app.Run();

@@ -1,0 +1,39 @@
+﻿@page
+@model TaskManager.Web.Pages.Reminders.IndexModel
+@{
+    ViewData["Title"] = "Reminders";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Create New Reminder</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Message</th>
+            <th>Reminder Time</th>
+            <th>Is Triggered</th>
+            <th>Task</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Reminders)
+        {
+                <tr>
+                    <td>@item.Message</td>
+                    <td>@item.ReminderTime.ToLocalTime()</td>
+                    <td>@(item.IsTriggered ? "Yes" : "No")</td>
+                    <td>@item.TaskTitle</td>
+                    <td>
+                        <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                        <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+        }
+    </tbody>
+</table>

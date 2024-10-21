@@ -1,0 +1,67 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card dashboard-card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Tasks</h5>
+                <p class="card-text display-4">@Model.TotalTasks</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card dashboard-card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Completed Tasks</h5>
+                <p class="card-text display-4">@Model.CompletedTasks</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card dashboard-card bg-warning text-dark">
+            <div class="card-body">
+                <h5 class="card-title">Pending Tasks</h5>
+                <p class="card-text display-4">@Model.PendingTasks</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="card-title">Recent Tasks</h5>
+                <ul class="list-group">
+                    @foreach (var task in Model.RecentTasks)
+                    {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            @task.Title
+                                <span class="badge bg-primary rounded-pill">@task.DueDate.ToString("MMM dd")</span>
+                            </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="card-title">Upcoming Reminders</h5>
+                <ul class="list-group">
+                    @foreach (var reminder in Model.UpcomingReminders)
+                    {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            @reminder.Message
+                                <span class="badge bg-warning text-dark rounded-pill">@reminder.ReminderTime.ToString("MMM dd HH:mm")</span>
+                            </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

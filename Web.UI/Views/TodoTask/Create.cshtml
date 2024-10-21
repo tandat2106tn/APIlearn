@@ -1,0 +1,47 @@
+﻿@model TaskManagerMVC.ViewModels.CreateTodoTaskViewModel
+
+@{
+    ViewData["Title"] = "Create Task";
+}
+
+<div class="container">
+    <h1 class="mt-4">Create New Task</h1>
+    <form asp-action="Create">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="DueDate" class="form-label"></label>
+            <input asp-for="DueDate" class="form-control" type="date" />
+            <span asp-validation-for="DueDate" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TaskTypeId" class="form-label">Task Type</label>
+            <select asp-for="TaskTypeId" class="form-select" asp-items="ViewBag.TaskTypes"></select>
+            <span asp-validation-for="TaskTypeId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TaskDifficultyId" class="form-label">Task Difficulty</label>
+            <select asp-for="TaskDifficultyId" class="form-select" asp-items="ViewBag.TaskDifficulties"></select>
+            <span asp-validation-for="TaskDifficultyId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
